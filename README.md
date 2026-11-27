@@ -106,10 +106,13 @@ An internet connection is needed for the prices and for the Tailwind CDN.
 
 ## Screenshots
 
-_Add screenshots here: home (light + dark), search results, coin detail, watchlist, error state, mobile view._
+![Home](screenshots/home.png)
+![Coin detail](screenshots/detail.png)
+![Watchlist](screenshots/watchlist.png)
 
 ## What I'd add next
 
 - Price alerts when a coin crosses a set price
 - Switching currency between ₹ and $
 - A longer price chart (30 days / 1 year)
+
