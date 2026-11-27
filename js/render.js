@@ -131,7 +131,7 @@ function createCoinRow(coin, showRemove = false) {
   logo.loading = 'lazy';
   const names = el('div', 'min-w-0');
   const link = el('a', 'block truncate font-semibold hover:text-amber-600 dark:hover:text-amber-400', name);
-  link.href = '#/coin/' + id;
+  link.href = '/coin/' + id;
   names.append(link, el('span', 'text-xs uppercase text-slate-500 dark:text-slate-400', symbol));
   coinCell.append(logo, names);
 
