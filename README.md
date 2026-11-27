@@ -70,6 +70,40 @@ No install needed.
 
 An internet connection is needed for the prices and for the Tailwind CDN.
 
+## Tech stack
+
+| Part | Used |
+|---|---|
+| Markup | HTML5 |
+| Styling | Tailwind CSS (Play CDN) + a small `style.css` |
+| Logic | Vanilla JavaScript (ES2020+), no frameworks or libraries |
+| Charts | Hand-drawn inline SVG |
+| Data | CoinGecko public API (no key) |
+| Storage | Browser LocalStorage |
+| Hosting | Vercel (static site, no build step) |
+
+## How it meets the Milestone 2 brief
+
+| Requirement | Where it's done |
+|---|---|
+| Vanilla JS only, no frameworks / jQuery | Whole project |
+| Results built with DOM methods | `render.js` uses `createElement`, `textContent`, `append`, `replaceChildren` |
+| `map` / `filter` / `sort` / `find` | `getVisibleCoins()`, `searchCoins()`, `renderCoinList()`, `toggleWatchlist()` |
+| Event delegation | `handleListClick()` in `app.js`: one listener per list handles hearts, Remove buttons and row clicks |
+| `fetch` with `async/await`, no `.then()` | `api.js` |
+| `try/catch` on every API call | `getJSON()` plus every loader in `app.js` (`loadTopCoins`, `runSearch`, `loadWatchlist`, `loadCoinDetail`) |
+| Loading, error and empty states | Skeleton rows, red error box with Try again, "No coins match…" / "Your watchlist is empty" |
+| User-triggered fetch | Search box and Refresh button |
+| LocalStorage that survives refresh, and remove syncs storage | `storage.js`; Remove, Clear all and Undo update storage immediately |
+| Responsive, hover/active states | Table on desktop, compact rows on phones; hover and press styles on every button and row |
+| Stretch goals | Debounced search ✅ Dark mode ✅ Skeleton loaders ✅ |
+
+## Known limitations
+
+- CoinGecko's free plan allows about 30 requests a minute, so very fast repeated refreshing can show the "Too many requests" message for a minute.
+- The watchlist is saved per browser and per address, so it doesn't sync between devices, and the local file and the live site keep separate lists.
+- Prices can be a minute or two behind the exchanges, because the free API is cached.
+
 ## Screenshots
 
 _Add screenshots here: home (light + dark), search results, coin detail, watchlist, error state, mobile view._
