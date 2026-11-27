@@ -107,8 +107,8 @@ An internet connection is needed for the prices and for the Tailwind CDN.
 ## Screenshots
 
 ![Home](screenshots/home.png)
-![Coin detail](screenshots/detail.png)
 ![Coin detail](screenshots/detailOne.png)
+![Coin detail](screenshots/detail.png)
 ![Watchlist](screenshots/watchlist.png)
 
 ## What I'd add next
