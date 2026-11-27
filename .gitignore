@@ -1,0 +1,16 @@
+# Only the website goes to GitHub: index.html, style.css, js/, README.md (+ screenshots/)
+
+# Not part of this project
+GeoRocks-Website-Rebuild/
+
+# My own notes, kept on my PC only
+PLAN.md
+
+# Editor / tool settings
+.claude/
+.vscode/
+
+# OS junk
+Thumbs.db
+Desktop.ini
+.DS_Store

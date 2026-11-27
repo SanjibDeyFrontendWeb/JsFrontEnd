@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoinWatch ₹ — Live crypto prices in rupees</title>
+  <meta name="description" content="Track the top cryptocurrencies in Indian Rupees. Search, sort and keep your own watchlist.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='16' fill='%23f59e0b'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>₹</text></svg>">
+
+  <!-- Set the theme before anything paints, so dark mode users don't see a white flash -->
+  <script>
+    const savedTheme = localStorage.getItem('coinwatch-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
+  <link rel="stylesheet" href="style.css">
+
+  <script src="js/utils.js" defer></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/api.js" defer></script>
+  <script src="js/render.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-200">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/85 backdrop-blur dark:border-slate-800 dark:bg-slate-900/85">
+    <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
+      <a href="#/" class="flex items-center gap-2 font-bold text-lg tracking-tight">
+        <span class="grid h-8 w-8 place-items-center rounded-full bg-amber-500 text-white">₹</span>
+        <span>CoinWatch</span>
+      </a>
+
+      <nav class="flex items-center gap-1 text-sm font-medium">
+        <a href="#/" data-nav="home" class="nav-link">Markets</a>
+        <a href="#/watchlist" data-nav="watchlist" class="nav-link">
+          Watchlist
+          <span id="watchlist-count" class="hidden ml-1 rounded-full bg-rose-100 px-1.5 py-0.5 text-xs font-semibold text-rose-700 dark:bg-rose-500/20 dark:text-rose-300">0</span>
+        </a>
+
+        <button id="theme-toggle" type="button" class="ml-1 grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <!-- moon, shown in light mode -->
+          <svg class="h-5 w-5 dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <!-- sun, shown in dark mode -->
+          <svg class="hidden h-5 w-5 dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-6 sm:py-8">
+
+    <!-- ===== Home / Markets ===== -->
+    <section id="home-view">
+      <div class="mb-6">
+        <h1 id="list-title" class="text-2xl font-bold tracking-tight sm:text-3xl">Today's top 20 coins</h1>
+        <p id="list-subtitle" class="mt-1 text-sm text-slate-500 dark:text-slate-400">Prices in Indian Rupees, live from CoinGecko.</p>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div class="relative w-full lg:max-w-sm">
+          <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="m20 20-3.5-3.5"/></svg>
+          <input id="search-input" type="search" autocomplete="off" placeholder="Search any coin — e.g. Solana, DOGE" aria-label="Search coins"
+            class="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-9 text-sm placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 dark:border-slate-700 dark:bg-slate-900">
+          <kbd class="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border border-slate-300 px-1.5 text-xs text-slate-400 sm:block dark:border-slate-700" id="search-hint">/</kbd>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <div id="filter-chips" class="flex rounded-lg border border-slate-300 bg-white p-0.5 text-sm dark:border-slate-700 dark:bg-slate-900" role="group" aria-label="Filter coins">
+            <button type="button" data-filter="all" aria-pressed="true" class="chip chip-active">All</button>
+            <button type="button" data-filter="gainers" aria-pressed="false" class="chip">Gainers</button>
+            <button type="button" data-filter="losers" aria-pressed="false" class="chip">Losers</button>
+          </div>
+
+          <label class="sr-only" for="sort-select">Sort by</label>
+          <select id="sort-select" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 dark:border-slate-700 dark:bg-slate-900">
+            <option value="market_cap_desc">Market cap: high to low</option>
+            <option value="market_cap_asc">Market cap: low to high</option>
+            <option value="price_desc">Price: high to low</option>
+            <option value="price_asc">Price: low to high</option>
+            <option value="change_desc">24h change: best first</option>
+            <option value="change_asc">24h change: worst first</option>
+          </select>
+
+          <button id="refresh-btn" type="button" class="btn-secondary">
+            <svg class="refresh-icon h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <div class="mb-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+        <span id="market-summary"></span>
+        <span id="last-updated"></span>
+      </div>
+
+      <!-- Coin table -->
+      <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="coin-grid border-b border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 sm:px-4 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+          <span></span>
+          <span class="hidden sm:block">#</span>
+          <span>Coin</span>
+          <span class="text-right">Price</span>
+          <span class="hidden text-right sm:block">24h</span>
+          <span class="hidden text-right lg:block">7d</span>
+          <span class="hidden text-right sm:block">Market cap</span>
+          <span class="hidden text-right lg:block">Last 7 days</span>
+        </div>
+        <div id="coin-list" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ===== Coin detail ===== -->
+    <section id="detail-view" class="hidden">
+      <button id="back-btn" type="button" class="mb-5 inline-flex items-center gap-1 rounded-lg px-2 py-1 -ml-2 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></svg>
+        Back
+      </button>
+      <div id="coin-detail" aria-live="polite"></div>
+    </section>
+
+    <!-- ===== Watchlist ===== -->
+    <section id="watchlist-view" class="hidden">
+      <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">Your watchlist</h1>
+          <p id="watchlist-subtitle" class="mt-1 text-sm text-slate-500 dark:text-slate-400">Coins you've saved. Stored in this browser.</p>
+        </div>
+        <div id="watchlist-actions" class="flex items-center gap-2">
+          <button id="clear-watchlist-btn" type="button" class="btn-secondary text-rose-600 hover:!bg-rose-50 dark:text-rose-400 dark:hover:!bg-rose-500/10">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>
+            Clear all
+          </button>
+          <button id="watchlist-refresh-btn" type="button" class="btn-secondary">
+            <svg class="refresh-icon h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <div class="with-remove overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div id="watchlist-head" class="coin-grid border-b border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 sm:px-4 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+          <span></span>
+          <span class="hidden sm:block">#</span>
+          <span>Coin</span>
+          <span class="text-right">Price</span>
+          <span class="hidden text-right sm:block">24h</span>
+          <span class="hidden text-right lg:block">7d</span>
+          <span class="hidden text-right sm:block">Market cap</span>
+          <span class="hidden text-right lg:block">Last 7 days</span>
+          <span></span>
+        </div>
+        <div id="watchlist-list" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mx-auto max-w-6xl px-4 pb-10 pt-4 text-center text-xs text-slate-400 dark:text-slate-500">
+    Data from <a href="https://www.coingecko.com/" target="_blank" rel="noopener" class="underline hover:text-slate-600 dark:hover:text-slate-300">CoinGecko</a>.
+    Prices can be a minute or two behind. Not financial advice.
+  </footer>
+
+  <!-- Toasts show up here -->
+  <div id="toast-area" class="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex flex-col items-center gap-2 px-4" aria-live="polite"></div>
+</body>
+</html>
